@@ -1,6 +1,6 @@
-Comp40 Hw1: FilesnPix
-Nick Murphy and Reed Kass-Mullet
-nmurph03 and rkass01
+# Comp40 Hw1: FilesnPix
+Nick Murphy(nmurph03) and Reed Kass-Mullet(rkass01)
+
 
 
 Total Time spent: Too much
