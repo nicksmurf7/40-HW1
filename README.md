@@ -19,4 +19,4 @@ Correctly implemented aspects of our programs:
 
 Incorrectly implemented aspects of our programs:
     - Readaline doesn't apply "If readaline is called when there are no more lines to be read, 
-        it sets *datapp to NULL and returns 0.
+        it sets *datapp to NULL and returns 0." as per the COMP40 filesnpix spec
