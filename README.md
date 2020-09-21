@@ -1,2 +1,22 @@
-# 40-HW1
-FML
+# Nick Murphy and Reed Kass-Mullet
+# nmurph03 and rkass01
+# Comp40 Hw1: FilesnPix
+
+
+Total Time spent: Too much
+
+Acknowledgements:
+Michael Kotlik
+Isabela Urdahl
+Daniel Alderman
+Mateo Hadeshian
+Jack Burns
+
+
+Correctly implemented aspects of our programs:
+    - Brightness works! We hope! Even though u can't see it on Git!
+    - Simlines looks lit as hell rn, except for these big memory leaks
+
+Incorrectly implemented aspects of our programs:
+    - Readaline doesn't apply "If readaline is called when there are no more lines to be read, 
+        it sets *datapp to NULL and returns 0.
