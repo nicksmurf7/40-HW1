@@ -201,7 +201,7 @@ void cleanline(char **line) {
     //printf("%s\n", *line);
     //int length = char_length(*line);
     char c;
-    char *clean = malloc(1000);
+    char *clean = malloc(sizeof(*line)*char_length(*line));
     //int shift = 0;
 
     int place = 0;
