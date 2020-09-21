@@ -95,7 +95,7 @@ int file_compare(struct filedata file, struct filedata secondaryfile, Table_T ma
 
 void addtodata(int linecount, struct filedata file, char *line, Table_T matches) {
     //printf("%s" "%s\n", "adding to data ", line);
-    //printf("%s" "%s\n",file.filename, secondaryfile.filename);
+    //printf("%s\n",file.filename);
     cleanline(&line);
     const char *aline = Atom_string(line);
     if (Table_get(matches, aline) == NULL) {
@@ -157,15 +157,27 @@ int check_repeat(Table_T matches, struct filedata file, char *line, int linenumb
 
 int line_compare(char *line, char *secondaryline) {
     //printf("comparing: ");
-    //printf("%s" "%s" "%s", toCompare, " and ", compared);
+    //printf("%s" "%s" "%s", line, " and ", secondaryline);
     //printf("\n");
     cleanline(&line);
     cleanline(&secondaryline);
-    //printf("%s" "%d\n", "length1: ", char_length(toCompare));
-    //printf("%s" "%d\n", "length2: ", char_length(compared));
-    
+    //printf("comparing (clean): ");
+    //printf("%s" "%s" "%s\n", line, " and ", secondaryline);
+    //printf("%s" "%d\n", "length1: ", char_length(line));
+    //printf("%s" "%d\n", "length2: ", char_length(secondaryline));
+    if (strcmp(line, secondaryline) == 0 ){
+        //They are the same
+        //printf("returning that they are the same\n");
+        return 0;
+    } else {
+        //they are not the same
+        //printf("returning that they are NOT the same\n");
+        return 1;
+    }
+
+    /*
     if(char_length(line) != char_length(secondaryline)){
-        //printf("(length) returning that they are not the same\n");
+        printf("(length) returning that they are not the same\n");
         return 1;
     }
 
@@ -174,25 +186,51 @@ int line_compare(char *line, char *secondaryline) {
     {
         if(line[x] != secondaryline[x])
         {
-            //printf("returning that they are not the same\n");
+            printf("returning that they are not the same\n");
             return 1;
         }
     }
-    //printf("returning that they are the same\n");
+    printf("returning that they are the same\n");
+    */
     return 0;
 }
 
 void cleanline(char **line) {
+    //Print checks
     //printf("cleaning\n");
     //printf("%s\n", *line);
-    //printf("C1\n");
-    int length = char_length(*line);
-    //printf("%s" "%d\n", "length = ", length);
-    //printf("C2\n");
+    //int length = char_length(*line);
     char c;
-    char *clean = malloc(1000);
-    //printf("C3\n");
-    int shift = 0;
+    char *clean = malloc(sizeof(*line)*char_length(*line));
+    //int shift = 0;
+
+    int place = 0;
+    int put = 0;
+    c = *(*line + place);
+    //printf("%s""%c\n", "c: ", c);
+    int protect = 0;
+    while(c != '\0') {
+        c = *(*line + place);
+        if (isacceptablecharacter(c) == 1) {
+            //printf("adding put ");
+            //printf("%c\n", c);
+            clean[put] = c;
+            place = place + 1;
+            put = put + 1;
+        } else {
+            clean[put] = 32;
+            put = put + 1;
+            while(isacceptablecharacter(c) == 0 && c != '\0') {
+                //printf("skipping put");
+                //printf("%c\n", c);
+                place = place + 1;
+                c = *(*line + place);
+            }
+        }
+        protect = protect + 1;
+    }
+
+    /*
     for (int i = 0; i < length; i++) {
         //printf("C4\n");
         //printf("%s" "%d", "i = ", i);
@@ -210,7 +248,7 @@ void cleanline(char **line) {
             //the current char is not a-z or '_'
             //printf("the char is unacceptable\n");
             if(i != 0 && !(i == (length - 1))) {
-                if (isacceptablecharacter(*(*line + i - 1)) == 1){
+                if (isacceptablecharacter(*(*line + i - 1)) == 1 && isacceptablecharacter(*(*line + i + 1))){
                     //printf("C6.3\n");
                     //printf("%s" "%d\n", "space input at: ", i - shift);
                     clean[i - shift] = (*line)[i];
@@ -227,10 +265,11 @@ void cleanline(char **line) {
                 shift = shift + 1;
             }
         }
-        //printf("%s" "%s\n", clean, "check");
+        
     }
+    */
+    //printf("%s" "%s\n", "Clean:", clean);
     *line = clean;
-    //printf("C7\n");
 }
 
 int isacceptablecharacter(char c) {
