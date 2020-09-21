@@ -6,11 +6,13 @@
 Total Time spent: Too much
 
 Acknowledgements:
-Michael Kotlik
-Isabela Urdahl
-Daniel Alderman
-Mateo Hadeshian
-Jack Burns
+Michael Kotlik,
+Isabela Urdahl,
+Daniel Alderman,
+Mateo Hadeshian,
+Jack Burns,
+Miko Hadeshian,
+Greg Aloupis
 
 
 Correctly implemented aspects of our programs:
