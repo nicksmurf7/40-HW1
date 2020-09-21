@@ -1,5 +1,4 @@
 #include "simlines.h"
-#include <string.h>
 
 #define SPACE ' '
 
@@ -130,20 +129,27 @@ int file_Compare(struct filedata file, struct filedata secondaryfile,
         while (secondaryline[0] != '\0') {
             loopcheck2++;
             /* Call line_compare on constant line and every line in secondary file */
-            if(line_Compare(line, secondaryline) == 0) {
+            cleanLine(&line);
+            cleanLine(&secondaryline);
+            if(line_Compare(&line, &secondaryline) == 0) {
                 /* Add to Database if match exists */
-                addToData(linecount, file, line, matches);
+                const char *aline = Atom_string(line);
+                addToData(linecount, file, aline, matches);
             }
             /* Continue reading secondary file */
+            free(secondaryline);
             readaline(Fsecondaryfile, &secondaryline);
         }
         /* Continue reading primary file */
+        free(line);
         readaline(Ffile, &line);
+        free(secondaryline);
         /* Close secondary file */
         fclose(Fsecondaryfile);
     }
    /* Close primary file */
     fclose(Ffile);
+    free(line);
     return 0;
 }
 
@@ -159,12 +165,13 @@ int file_Compare(struct filedata file, struct filedata secondaryfile,
  *       the filedata struct that pertains to the line is added to the list of other
  *      matches to that line. 
  */
-void addToData(int linecount, struct filedata file, char *line, Table_T matches) 
+void addToData(int linecount, struct filedata file, const char *aline, Table_T matches) 
 {
     /* Call cleanline so that line can be searched for in database of matches */
-    cleanLine(&line);
+    //cleanLine(&line);
     /* Line is converted to an Atom so it can be stored in table easily */
-    const char *aline = Atom_string(line);
+    //const char *aline = Atom_string(line);
+    //free(line);
     /* If the line does not already exist within the database */
     if (Table_get(matches, aline) == NULL) {
         /* Initialize list member */
@@ -179,7 +186,7 @@ void addToData(int linecount, struct filedata file, char *line, Table_T matches)
         Table_put(matches, aline, locations); 
     } else {
         /* If Match already exists in database: */
-            if (check_Repeat(matches, file, line, linecount) == 1) {
+            if (check_Repeat(matches, file, aline, linecount) == 1) {
             /* Get pre-existing list of matches */
             List_T locations = Table_get(matches, aline);
             struct location *newloc_1 = malloc(sizeof(*newloc_1));
@@ -207,10 +214,10 @@ void addToData(int linecount, struct filedata file, char *line, Table_T matches)
  *          1 if it has not. 
  * Does: Checks if the exact instance of the line has already been added to the database
  */
-int check_Repeat(Table_T matches, struct filedata file, char *line, int linenumber) 
+int check_Repeat(Table_T matches, struct filedata file, const char *line, int linenumber) 
 {
     /* Initialize List_T object for parsing through list */
-    List_T locations = Table_get(matches, Atom_string(line));
+    List_T locations = Table_get(matches, line);
     List_T parse = locations;
     while (parse != NULL) {
         struct location *current = parse->first;
@@ -240,14 +247,14 @@ int check_Repeat(Table_T matches, struct filedata file, char *line, int linenumb
  * Returns: 0 if the lines are the same, 1 if not
  * Does: Checks if two lines  are the same
  */
-int line_Compare(char *line, char *secondaryline) 
+int line_Compare(char **line, char **secondaryline) 
 {
     /* Sanitize lines so that they can be compared
       in a constant format */
-    cleanLine(&line);
-    cleanLine(&secondaryline);
+    //cleanLine(line);
+    //cleanLine(secondaryline);
     /* Compare strings using string_comp function */
-    if (strcmp(line, secondaryline) == 0 ) {
+    if (strcmp(*line, *secondaryline) == 0 ) {
         /* They are the same: */
         return 0;
     } else {
@@ -311,7 +318,7 @@ void cleanLine(char **line)
         }
         protect = protect + 1;
     }
-    //clean = realloc(clean, sizeof(clean));
+    
     *line = clean;
     //free(clean);
     //free(line);
@@ -434,6 +441,7 @@ void process_File(struct filedata file)
     if(Ffile == NULL) {
         exit(EXIT_FAILURE);
     }
+    fclose(Ffile);
 }
 
 
@@ -461,6 +469,16 @@ void remove_List(const void *key,void **value, void *cl)
 {
     (void) key;
     (void) cl;
+    //free(key);
+    List_map(*value, applyFree, NULL);
     List_free(*value);
-    //free(*value);
+}
+
+void applyFree(void **ptr, void *cl) {
+    printf("freed: ");
+    //printf("%s\n", *ptr->filename);
+    (void) cl;
+    //struct location loc = *ptr;
+    //free(loc->filename);
+    free(*ptr);
 }
