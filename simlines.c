@@ -169,7 +169,7 @@ void addToData(int linecount, struct filedata file, char *line, Table_T matches)
             if (check_Repeat(matches, file, line, linecount) == 1) {
             // Get pre-existing list of matches
             List_T locations  = Table_get(matches, aline);
-            struct location *newloc_1 = malloc(sizeof(struct location));
+            struct location *newloc_1 = malloc(sizeof(*newloc_1));
             newloc_1->filename = file.filename;
             newloc_1->linenumber = linecount;
             newloc_1->identifier = file.identifier;
@@ -179,7 +179,7 @@ void addToData(int linecount, struct filedata file, char *line, Table_T matches)
             } else {
                 // Exact struct already exists, do not add (do nothing)
             }
-        
+ 
     }
 }
 
@@ -230,7 +230,7 @@ int line_Compare(char *line, char *secondaryline) {
     cleanLine(&line);
     cleanLine(&secondaryline);
     // Compare strings using string_comp function
-    if (string_Comp(line, secondaryline) == 0 ){
+    if (strcmp(line, secondaryline) == 0 ){
         //They are the same:
         return 0;
     } else {
@@ -245,7 +245,7 @@ int line_Compare(char *line, char *secondaryline) {
 // Returns: 0 if the char arrays are the same, 0 otherwise
 // Does: Checks if two char arrays are the same
 int string_Comp(char *str1, char *str2){
-    while( ( *str1 != '\0' && *str2 != '\0' ) && *str1 == *str2){
+    while( ( *str1 != '\0' && *str2 != '\0' ) && *str1 == *str2 && (str1 != NULL && str2 != NULL)){
         str1++;
         str2++;
     }
@@ -294,6 +294,8 @@ void cleanLine(char **line) {
     }
     //clean = realloc(clean, sizeof(clean));
     *line = clean;
+    //free(clean);
+    //free(line);
 }
 
 
@@ -425,5 +427,5 @@ void remove_List(const void *key,void **value, void *cl){
     (void) key;
     (void) cl;
     List_free(*value);
-    free(*value);
+    //free(*value);
 }
