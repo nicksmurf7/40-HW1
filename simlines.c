@@ -26,19 +26,21 @@ int main(int argc, char *argv[])
         /* Reverse list of files so that the first */
         /* inputted file is first in the list */
         //printf("files\n");
-        //List_map(allfiles, printvalue, NULL);
         //allfiles = List_reverse(allfiles);
 
         //int t = List_length(allfiles);
         //printf("%s""%d\n", "number of files: ", t);
-        List_map(allfiles, printvalue, NULL);
        
         /* Compare the two files */
         compare_Files(allfiles, matches);
 
         /* Print the database of matches */
+        printf("Print round 1\n");
         int x = Table_length(matches);
         Table_map(matches, print_Table, (void *) &x);
+        //printf("\nPrint round 2\n");
+        //int y = Table_length(matches);
+        //Table_map(matches, print_Table, (void *) &y);
 
         /* End simlines by freeing all memory */
         end_Simlines(matches, allfiles);
@@ -55,8 +57,6 @@ int main(int argc, char *argv[])
  */
 void compare_Files(List_T allfiles, Table_T matches) 
 {
-    //printf("files:\n");
-    List_map(allfiles, printvalue, NULL);
     List_T parse = allfiles;
     while (parse != NULL) {
         struct filedata *current = parse->first; 
@@ -239,32 +239,35 @@ void addToData(int linecount, struct filedata file, const char *aline, Table_T m
     if (Table_get(matches, aline) == NULL) {
         //printf("adding new\n");
         /* Initialize list member */
+        //List_T locations = malloc(sizeof(*locations)); //mem leak
         List_T locations = List_list(NULL);
         struct location *newloc_1 = malloc(sizeof(struct location));
         newloc_1->filename = file.filename;
         newloc_1->linenumber = linecount;
         newloc_1->identifier = file.identifier;
         /* Push element onto list of matches */
-        locations = List_push(locations, newloc_1);
+        locations = List_append(locations, List_list(newloc_1, NULL));
+        //locations = List_push(locations, newloc_1);
         /* Put new list onto table */
         Table_put(matches, aline, locations); 
+        //printf("constructed1\n");
     } else {
         /* If Match already exists in database: */
         //printf("adding already existing\n");
             if (check_Repeat(matches, file, aline, linecount) == 1) {
             /* Get pre-existing list of matches */
             List_T locations = Table_get(matches, aline);
-            struct location *newloc_1 = malloc(sizeof(*newloc_1));
+            struct location *newloc_1 = malloc(sizeof(struct location));
             newloc_1->filename = file.filename;
             newloc_1->linenumber = linecount;
             newloc_1->identifier = file.identifier;
             /* Push new map onto list of matches */
-            locations = List_push(locations, newloc_1);
+            locations = List_append(locations, List_list(newloc_1, NULL)); //mem leak
+            //locations = List_push(locations, newloc_1); //mem leak
+        
             Table_put(matches, aline, locations);
-            } else {
-                /* Exact struct already exists, do not add (do nothing) */
-            }
- 
+            //printf("constructed2\n");
+        }
     }
 }
 
@@ -421,18 +424,6 @@ struct location makeLocation(char *filename, int linenumber)
 }
 
 
-
-
-// Why do we still have this
-void add_match(List_T *matches) 
-{
-    (void) matches;
-}
-
-
-
-
-
 /* Print_Table
  * Gets: Key (line) to list to be printed, the list, length of list
  * Returns: Nothing
@@ -442,13 +433,10 @@ void print_Table(const void *key, void **value, void *left)
 {
     printf("%s\n", (char *) key);
     List_T parse = *value;
-    parse = List_reverse(parse);
     /* Parses through table, printing each with padded strings */
     while (parse != NULL) {
-
         struct location *currentlocation = parse->first;
         printf("%-20s" "%7d\n", currentlocation->filename, currentlocation->linenumber);
-        free(parse->first);
         parse = parse->rest;
     }
     /* If not the final match, print newline between next match */
@@ -486,7 +474,10 @@ void end_Simlines(Table_T matches, List_T allfiles)
     /* Calls remove_List on every element of the 
         database using Table_map */
     List_map(allfiles, applyFree, NULL);
+    List_free(&allfiles);
+
     Table_map(matches, remove_List, NULL);
+
     /* Free memory allocated for table */
     List_free(&allfiles);
     Table_free(&matches);
@@ -500,38 +491,26 @@ void end_Simlines(Table_T matches, List_T allfiles)
  */
 void remove_List(const void *key,void **value, void *cl)
 {
-    //printf("removedafile\n");
     (void) key;
-    //(void) value;
     (void) cl;
-    printf("freeingtableentry\n");
-    //List_map(*value, applyFree, NULL);
-    List_free(*value);
-    /*
+
     List_T parse = *value;
-    //parse = List_reverse(parse);
-     Parses through table, printing each with padded strings 
-    //printf("%d\n", (int) List_length(*value));
-    //while (parse != NULL) {
-        //printf("removedafilelocation\n");
-        //struct filedata *currentlocation = parse->first;
-        //printf("%-20s\n", currentlocation->filename);
-        //free(parse->first);
-        parse = parse->rest;
+    List_T head = parse;
+    while (parse != NULL) {
+        printf("FREED LOC\n");
+        List_T temp = parse->rest;
+        struct location *loc = parse->first;
+        printf("%s\n", loc->filename);
+        free(parse->first);
+        parse = temp;            
     }
-    */
+    printf("Freed Match\n");
+    List_free(&head);
 }
 
 void applyFree(void **ptr, void *cl) {
-    (void) cl;
-    printf("freed: ");
-
-    free(*ptr);
-}
-
-void printvalue(void **ptr, void *cl){
+    //printf("FREED:\n");
     (void) cl;
     (void) ptr;
-    //struct filedata *file = *ptr;
-    //printf("%s\n", file->filename);
+    free(*ptr);
 }
