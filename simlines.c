@@ -25,7 +25,13 @@ int main(int argc, char *argv[])
         Table_T matches = Table_new(0, NULL, NULL);
         /* Reverse list of files so that the first */
         /* inputted file is first in the list */
-        allfiles = List_reverse(allfiles);
+        //printf("files\n");
+        //List_map(allfiles, printvalue, NULL);
+        //allfiles = List_reverse(allfiles);
+
+        //int t = List_length(allfiles);
+        //printf("%s""%d\n", "number of files: ", t);
+        List_map(allfiles, printvalue, NULL);
        
         /* Compare the two files */
         compare_Files(allfiles, matches);
@@ -35,12 +41,11 @@ int main(int argc, char *argv[])
         Table_map(matches, print_Table, (void *) &x);
 
         /* End simlines by freeing all memory */
-        end_Simlines(matches);
+        end_Simlines(matches, allfiles);
     }
+
     return 0;
 }
-
-
 
 
 /* Compare_files
@@ -50,15 +55,23 @@ int main(int argc, char *argv[])
  */
 void compare_Files(List_T allfiles, Table_T matches) 
 {
+    //printf("files:\n");
+    List_map(allfiles, printvalue, NULL);
     List_T parse = allfiles;
     while (parse != NULL) {
         struct filedata *current = parse->first; 
+        //printf("primary file: ");
+        //printf("%s\n", current->filename);
         List_T compare_parse = allfiles;
         /* Parse through list of files while there are files left */
         while (compare_parse != NULL) {
             struct filedata *secondary = compare_parse->first;
+            //printf("secondary file: ");
+            //printf("%s\n", secondary->filename);
+
             /* Compare the two files to check if they are the same */
             if (filedata_Compare(*current, *secondary) == 0) {
+                //printf("Aren't the same, comparing primary and secondary\n");
                 file_Compare(*current, *secondary, matches);
             }
             compare_parse = compare_parse->rest;
@@ -66,12 +79,6 @@ void compare_Files(List_T allfiles, Table_T matches)
         parse = parse->rest;
         }
 }
-
-
-
-
-
-
 
 /* filedata_compare
  * Gets: two individual file structs
@@ -109,50 +116,106 @@ int file_Compare(struct filedata file, struct filedata secondaryfile,
     if(Ffile == NULL){
         exit(EXIT_FAILURE);
     }
-    char *line;
+    
     /* Call readaline on first file */
-    readaline(Ffile, &line);
     int linecount = 0;
-    int loopcheck1 = 0;
-    int loopcheck2 = 0;
-    while (line[0] != '\0') {
+    char *line;
+    int linelength = readaline(Ffile, &line);
+    //while (line[0] != '\0') {
+    while(line != NULL) {
         FILE *Fsecondaryfile = fopen(secondaryfile.filename, "r");
         /* If file cannot be opened, exit with EXIT_FAILURE */
         if(Fsecondaryfile == NULL) {
             exit(EXIT_FAILURE);
         }
-        loopcheck1++;
+
         linecount = linecount + 1;
         char* secondaryline;
+        int secondarylength = readaline(Fsecondaryfile, &secondaryline);
+
         /* Call readaline on second file */
-        readaline(Fsecondaryfile, &secondaryline);
-        while (secondaryline[0] != '\0') {
-            loopcheck2++;
+        while (secondaryline != NULL) {
             /* Call line_compare on constant line and every line in secondary file */
-            cleanLine(&line);
-            cleanLine(&secondaryline);
-            if(line_Compare(&line, &secondaryline) == 0) {
+            //printf("line: %s\n", line);
+            //printf("secondaryline: %s\n", secondaryline);
+            const char *cline = cleanLine(&line, linelength);
+            const char *csecondary = cleanLine(&secondaryline, secondarylength);
+            //printf("CLEAN line: %s\n", cline);
+            //printf("CLEAN secondaryline: %s\n", csecondary);
+            if((cline && csecondary) && line_Compare(cline, csecondary, linelength) == 0) {
                 /* Add to Database if match exists */
-                const char *aline = Atom_string(line);
-                addToData(linecount, file, aline, matches);
+                /////const char *aline = Atom_string(cline);
+                //printf("adding: ");
+                //printf("%s\n", aline);
+                addToData(linecount, file, cline, matches);
             }
             /* Continue reading secondary file */
             free(secondaryline);
-            readaline(Fsecondaryfile, &secondaryline);
+            secondarylength = readaline(Fsecondaryfile, &secondaryline);
         }
         /* Continue reading primary file */
         free(line);
-        readaline(Ffile, &line);
-        free(secondaryline);
+        //free(secondaryline); //NOT WORKING
+        linelength = readaline(Ffile, &line);
         /* Close secondary file */
         fclose(Fsecondaryfile);
     }
    /* Close primary file */
     fclose(Ffile);
-    free(line);
+    //free(line); //NOT WORKING
     return 0;
 }
 
+
+
+/* cleanLine
+ * Gets: Line to be cleaned
+ * Returns: Nothing
+ * Does: Cleans line so that it can be formatted the same as others
+ *
+ *   ADD COMMENTS WITHIN
+ */
+const char *cleanLine(char **line, int length) 
+{
+    char c = 0;
+    char *clean = (char *) malloc(sizeof(*line)*length);
+    int place = 0;
+    int put = 0;
+    c = *(*line + place);
+    //printf("%c\n", c);
+    while(place < length) {
+        c = *(*line + place);
+        //printf("%c\n", c);
+        //printf("%d\n", c);
+        if (isAcceptableChar(c) == 1) {
+            clean[put] = c;
+            place = place + 1;
+            put = put + 1;
+        } else {
+            while(place < length && isAcceptableChar(c) == 0) {
+                place = place + 1;
+                c = *(*line + place);
+            }
+            if (place < length) {
+                clean[put] = 32;
+                put = put + 1;
+            }
+        }
+        
+    }
+    clean[put] = '\0';
+    //printf("%d\n", put);
+    //printf("\"" "%s" "\"\n", clean);
+    //printf("%d\n", put);
+    //free(*line);
+    //clean = realloc(sizeof(*line)(length - )
+    const char * aline = Atom_string(clean);
+    free(clean);
+    if (put == 0) {
+        return NULL;
+    }
+    return aline;
+}
 
 
 
@@ -174,6 +237,7 @@ void addToData(int linecount, struct filedata file, const char *aline, Table_T m
     //free(line);
     /* If the line does not already exist within the database */
     if (Table_get(matches, aline) == NULL) {
+        //printf("adding new\n");
         /* Initialize list member */
         List_T locations = List_list(NULL);
         struct location *newloc_1 = malloc(sizeof(struct location));
@@ -186,6 +250,7 @@ void addToData(int linecount, struct filedata file, const char *aline, Table_T m
         Table_put(matches, aline, locations); 
     } else {
         /* If Match already exists in database: */
+        //printf("adding already existing\n");
             if (check_Repeat(matches, file, aline, linecount) == 1) {
             /* Get pre-existing list of matches */
             List_T locations = Table_get(matches, aline);
@@ -247,14 +312,15 @@ int check_Repeat(Table_T matches, struct filedata file, const char *line, int li
  * Returns: 0 if the lines are the same, 1 if not
  * Does: Checks if two lines  are the same
  */
-int line_Compare(char **line, char **secondaryline) 
+int line_Compare(const char *line, const char *secondaryline, int length) 
 {
+    (void) length;
     /* Sanitize lines so that they can be compared
       in a constant format */
     //cleanLine(line);
     //cleanLine(secondaryline);
     /* Compare strings using string_comp function */
-    if (strcmp(*line, *secondaryline) == 0 ) {
+    if (strcmp(line, secondaryline) == 0 ) {
         /* They are the same: */
         return 0;
     } else {
@@ -287,42 +353,6 @@ int string_Comp(char *str1, char *str2)
 
 
 
-/* cleanLine
- * Gets: Line to be cleaned
- * Returns: Nothing
- * Does: Cleans line so that it can be formatted the same as others
- *
- *   ADD COMMENTS WITHIN
- */
-void cleanLine(char **line) 
-{
-    char c;
-    char *clean = malloc(sizeof(*line)*char_Length(*line));
-    int place = 0;
-    int put = 0;
-    c = *(*line + place);
-    int protect = 0;
-    while(c != '\0') {
-        c = *(*line + place);
-        if (isAcceptableChar(c) == 1) {
-            clean[put] = c;
-            place = place + 1;
-            put = put + 1;
-        } else {
-            clean[put] = 32;
-            put = put + 1;
-            while(isAcceptableChar(c) == 0 && c != '\0') {
-                place = place + 1;
-                c = *(*line + place);
-            }
-        }
-        protect = protect + 1;
-    }
-    
-    *line = clean;
-    //free(clean);
-    //free(line);
-}
 
 
 
@@ -369,7 +399,7 @@ int isAcceptableChar(char c)
  */
 int char_Length(char *c) 
 {
-    int i = 0;
+    int i;
     for (i = 0; (int) c[i] != (int)'\0'; ++i);
     return i;
 }
@@ -415,9 +445,10 @@ void print_Table(const void *key, void **value, void *left)
     parse = List_reverse(parse);
     /* Parses through table, printing each with padded strings */
     while (parse != NULL) {
+
         struct location *currentlocation = parse->first;
         printf("%-20s" "%7d\n", currentlocation->filename, currentlocation->linenumber);
-        
+        free(parse->first);
         parse = parse->rest;
     }
     /* If not the final match, print newline between next match */
@@ -450,12 +481,14 @@ void process_File(struct filedata file)
  * Returns: Nothing
  * Does: Frees memory allocated for table
  */
-void end_Simlines(Table_T matches)
+void end_Simlines(Table_T matches, List_T allfiles)
 {
     /* Calls remove_List on every element of the 
         database using Table_map */
+    List_map(allfiles, applyFree, NULL);
     Table_map(matches, remove_List, NULL);
     /* Free memory allocated for table */
+    List_free(&allfiles);
     Table_free(&matches);
 }
 
@@ -467,18 +500,38 @@ void end_Simlines(Table_T matches)
  */
 void remove_List(const void *key,void **value, void *cl)
 {
+    //printf("removedafile\n");
     (void) key;
+    //(void) value;
     (void) cl;
-    //free(key);
-    List_map(*value, applyFree, NULL);
+    printf("freeingtableentry\n");
+    //List_map(*value, applyFree, NULL);
     List_free(*value);
+    /*
+    List_T parse = *value;
+    //parse = List_reverse(parse);
+     Parses through table, printing each with padded strings 
+    //printf("%d\n", (int) List_length(*value));
+    //while (parse != NULL) {
+        //printf("removedafilelocation\n");
+        //struct filedata *currentlocation = parse->first;
+        //printf("%-20s\n", currentlocation->filename);
+        //free(parse->first);
+        parse = parse->rest;
+    }
+    */
 }
 
 void applyFree(void **ptr, void *cl) {
-    printf("freed: ");
-    //printf("%s\n", *ptr->filename);
     (void) cl;
-    //struct location loc = *ptr;
-    //free(loc->filename);
+    printf("freed: ");
+
     free(*ptr);
+}
+
+void printvalue(void **ptr, void *cl){
+    (void) cl;
+    (void) ptr;
+    //struct filedata *file = *ptr;
+    //printf("%s\n", file->filename);
 }
