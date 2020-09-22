@@ -6,6 +6,14 @@ void reallocate(char **line, int malloc_size);
 
 #define INITIAL_SIZE 200
 
+
+
+/* readaline
+ * Gets: User-inputted file, pointer to char array to hold line
+ * Returns: Size of line that was just read
+ * Does: Reads a line from inputfd, returns the size of 
+ * the read line
+ */
 size_t readaline(FILE *inputfd, char **datapp) {
     char *line;
     int c;
@@ -44,9 +52,23 @@ size_t readaline(FILE *inputfd, char **datapp) {
     return length;
 }
 
+
+/* add_to_string
+ * Gets: Line to add char from, char to add, index of char
+ * Returns: Nothing
+ * Does: Adds char to string
+ */
 void add_to_string(char **line, char c, int length){
     *(*line + length) = c;
 }
+
+
+
+/* reallocate
+ * Gets: Line that is too big, previously allocated size
+ * Returns: Nothing
+ * Does: Reallocs space for line when it is too long
+ */
 void reallocate(char **line, int malloc_size) {
     *line = realloc(*line, malloc_size * 2);
 }
