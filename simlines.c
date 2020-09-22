@@ -1,3 +1,14 @@
+/* 
+ * simlines.c
+ * by Nick Murphy(nmurph03) and Reed Kass-Mullet (rkassm01)
+ * Filesnpix, hw1
+ * 
+ * Utilizes readaline function to read in every line
+ * of user-inputted files and looks for 'similar' lines,
+ * where every word in one line matches the other line. Prints
+ * all matching lines then frees allocated memory. 
+ */
+
 #include "simlines.h"
 
 #define MAX_LENGTH 20
