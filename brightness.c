@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     }
     double sum = 0;
     double average = 0;
-    for(double i = 0; i < total_pix; i++){
+    for (double i = 0; i < total_pix; i++) {
         sum = sum + Pnmrdr_get(rdr);
     }
     double denom = data.denominator;
