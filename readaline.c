@@ -12,15 +12,15 @@ size_t readaline(FILE *inputfd, char **datapp) {
     int length = 0;
     int malloc_size = INITIAL_SIZE;
 
-    line = (char *) malloc(INITIAL_SIZE);
+    line = malloc(INITIAL_SIZE);
 
-    c = fgetc(inputfd);
-
-    //TBC
     if (feof(inputfd)) {
                 *datapp = NULL;
+                free(line); //NEW
                 return 0;
-        }
+    }
+
+    c = fgetc(inputfd);
 
     while (!feof(inputfd)) {
         add_to_string(&line, c, length);
